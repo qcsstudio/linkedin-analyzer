@@ -22,6 +22,8 @@ exports.uploadProfileData = async (req, res) => {
   try {
     const p = req.body;
 
+    console.log("Received profile data:", p);
+
     if (!p || Object.keys(p).length === 0) {
       return res.status(400).json({ message: "Profile data required" });
     }
