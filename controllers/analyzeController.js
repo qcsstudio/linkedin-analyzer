@@ -1,7 +1,8 @@
 const { parsePDF } = require("../services/pdfParserService");
 const { scoreProfile } = require("../utils/scoringEngine");
 const { analyzeProfileAI } = require("../services/aiService");
-
+const { normalizeRole } = require("../utils/roleNormalizer");
+const { scoreProfileWithRole } = require("../utils/roleAwareScorer");
 // -------------------------
 // 1️⃣ Upload PDF - FREE
 // -------------------------
@@ -21,76 +22,33 @@ exports.uploadAndExtract = async (req, res) => {
 exports.uploadProfileData = async (req, res) => {
   try {
     const p = req.body;
+    if (!p) return res.status(400).json({ message: "Profile data required" });
 
-    console.log("Received profile data:", p);
-
-    if (!p || Object.keys(p).length === 0) {
-      return res.status(400).json({ message: "Profile data required" });
-    }
-
-    // -------------------------
-    // Convert new structured JSON -> plain text
-    // -------------------------
     let text = "";
+    Object.values(p).forEach(v => {
+      if (typeof v === "string") text += v + "\n";
+      if (Array.isArray(v)) text += JSON.stringify(v) + "\n";
+    });
 
-    if (p.username) text += `Username: ${p.username}\n`;
-    if (p.headline) text += `Headline: ${p.headline}\n`;
-    if (p.about) text += `About: ${p.about}\n`;
-    if (p.location) text += `Location: ${p.location}\n`;
-    if (p.connections) text += `Connections: ${p.connections}\n`;
+    const selectedRole = normalizeRole(p.role);
+    const result = await scoreProfileWithRole(text, selectedRole);
 
-    // Experience (object array)
-    if (p.experience && Array.isArray(p.experience)) {
-      text += "\nExperience:\n";
-      p.experience.forEach(exp => {
-        if (exp.title) text += `${exp.title} at ${exp.company || ""}\n`;
-        if (exp.duration) text += `Duration: ${exp.duration}\n`;
-        if (exp.location) text += `Location: ${exp.location}\n`;
-        if (exp.description) text += `Description: ${exp.description}\n\n`;
-      });
-    }
-
-    // Education (object array)
-    if (p.education && Array.isArray(p.education)) {
-      text += "\nEducation:\n";
-      p.education.forEach(ed => {
-        if (ed.school) text += `${ed.school} - ${ed.degree || ""}\n`;
-        if (ed.duration) text += `Duration: ${ed.duration}\n\n`;
-      });
-    }
-
-    // Skills (array)
-    if (p.skills) {
-      text += `Skills: ${p.skills.join(", ")}\n`;
-    }
-
-    // Activity (object array)
-    if (p.activity && Array.isArray(p.activity)) {
-      text += "\nActivity:\n";
-      p.activity.forEach(a => {
-        if (a.type) text += `Type: ${a.type}\n`;
-        if (a.text) text += `Text: ${a.text}\n`;
-        if (a.timestamp) text += `Time: ${a.timestamp}\n\n`;
-      });
-    }
-
-    if (p.contact) text += `Contact: ${p.contact}\n`;
-
-    // -------------------------
-    // Score the profile
-    // -------------------------
-    const score = scoreProfile(text);
-
-    let message = "";
-    if (score < 40) message = "Your profile is weak";
-    else if (score < 70) message = "Your profile is intermediate";
-    else message = "Your profile is strong";
+    let strength = "weak";
+    if (result.finalScore >= 40) strength = "intermediate";
+    if (result.finalScore >= 70) strength = "strong";
 
     res.json({
       success: true,
-      score: score + "%",
-      potential: 100 - score + "%",
-      message,
+      score: result.finalScore + "%",
+      baseScore: result.baseScore + "%",
+      roleSelected: result.selectedRole,
+      roleDetected: result.detectedRole,
+      roleMatch: result.roleMatch,
+      potential: 100 - result.finalScore + "%",
+      strength,
+      message: result.roleMatch
+        ? "Your profile matches your selected role"
+        : "Your profile does not match the selected role"
     });
 
   } catch (err) {
@@ -98,7 +56,6 @@ exports.uploadProfileData = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
 
 
 // -------------------------
