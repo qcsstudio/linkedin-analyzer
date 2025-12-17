@@ -20,13 +20,19 @@ exports.verifyPaymentController = async (req, res) => {
     const isValid = verifyPayment(orderId, paymentId, signature);
 
     if (!isValid) {
-      return res.status(400).json({ success: false, message: "Invalid payment signature" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payment signature"
+      });
     }
 
     req.user.hasPaid = true;
     await req.user.save();
 
-    res.json({ success: true, message: "Payment verified successfully. You can now access suggestions." });
+    res.json({
+      success: true,
+      message: "Payment verified"
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
