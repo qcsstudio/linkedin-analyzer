@@ -1,12 +1,22 @@
 function detectProfileType(text) {
-  const t = text.toLowerCase();
+  const scores = {
+    founder: 0,
+    recruiter: 0,
+    sales: 0,
+    consultant: 0,
+    job_seeker: 0
+  };
 
-  if (t.match(/founder|ceo|startup|co-founder|vision|scaling/)) return "founder";
-  if (t.match(/recruiter|hiring|talent|sourcing|interview/)) return "recruiter";
-  if (t.match(/sales|sdr|ae|pipeline|revenue|closing|crm/)) return "sales";
-  if (t.match(/consultant|coach|advisory|strategy|mentor/)) return "consultant";
+  if (/(founder|co-founder|ceo|startup|vision)/.test(text)) scores.founder += 3;
+  if (/(hiring|recruiter|talent|sourcing)/.test(text)) scores.recruiter += 3;
+  if (/(sales|pipeline|revenue|closing|crm)/.test(text)) scores.sales += 3;
+  if (/(consultant|coach|advisor|clients|strategy)/.test(text)) scores.consultant += 3;
+  if (/(developer|engineer|react|node|javascript|software)/.test(text)) scores.job_seeker += 3;
 
-  return "job_seeker"; // developer default
+  const detectedRole = Object.keys(scores)
+    .sort((a, b) => scores[b] - scores[a])[0];
+
+  return { detectedRole, scores };
 }
 
 module.exports = { detectProfileType };

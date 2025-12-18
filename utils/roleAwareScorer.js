@@ -1,57 +1,62 @@
 const { scoreProfile } = require("./scoringEngine");
 const { detectProfileType } = require("./profileDetector");
-const OpenAI = require("openai");
+const roleRules = require("./roleExpectations");
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
-async function detectRoleWithAI(text) {
-  const prompt = `
-Classify the LinkedIn profile into ONE role only:
-job_seeker, founder, sales, consultant, recruiter.
-
-Return ONLY the role.
-
-Profile:
-"""${text}"""
-`;
-
-  const res = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [{ role: "user", content: prompt }],
-    temperature: 0
-  });
-
-  return res.choices[0].message.content.trim().toLowerCase();
+function keywordMatchCount(text, keywords = []) {
+  return keywords.filter(k => text.includes(k)).length;
 }
 
-async function scoreProfileWithRole(text, selectedRole) {
-  const baseScore = scoreProfile(text);
-  const ruleDetected = detectProfileType(text);
-  let aiDetected = ruleDetected;
+function scoreProfileWithRole(text, selectedRole) {
+  const base = scoreProfile(text);
+  const { detectedRole } = detectProfileType(text);
 
-  // 🔥 Use AI ONLY if mismatch suspected
-  if (ruleDetected !== selectedRole) {
-    aiDetected = await detectRoleWithAI(text);
+  let finalScore = base.total;
+  const penalties = [];
+
+  const rules = roleRules[selectedRole];
+
+  if (rules?.required) {
+    const matchCount = keywordMatchCount(text, rules.required);
+    if (matchCount === 0) {
+      finalScore -= rules.penaltyMissing;
+      penalties.push("missing_role_signals");
+    } else if (matchCount === 1) {
+      finalScore -= Math.round(rules.penaltyMissing / 2);
+      penalties.push("weak_role_signals");
+    }
   }
 
-  let penalty = 0;
-
-  if (aiDetected !== selectedRole) {
-    penalty = 40; // STRONG mismatch
-  } else if (ruleDetected !== selectedRole) {
-    penalty = 20; // weak mismatch
+  if (rules?.forbidden && keywordMatchCount(text, rules.forbidden) > 0) {
+    finalScore -= rules.penaltyForbidden;
+    penalties.push("conflicting_role_signals");
   }
 
-  const finalScore = Math.max(baseScore - penalty, 0);
+  const softSimilarity = {
+    founder: ["job_seeker"],
+    consultant: ["job_seeker"],
+    job_seeker: ["founder", "consultant"]
+  };
+
+  if (detectedRole !== selectedRole) {
+    if (softSimilarity[selectedRole]?.includes(detectedRole)) {
+      finalScore -= 8;
+      penalties.push("soft_role_mismatch");
+    } else {
+      finalScore -= 20;
+      penalties.push("role_mismatch");
+    }
+  }
+
+  finalScore = Math.max(finalScore, 0);
 
   return {
+    baseScore: base.total,
     finalScore,
-    baseScore,
     selectedRole,
-    detectedRole: aiDetected,
-    roleMatch: aiDetected === selectedRole
+    detectedRole,
+    roleMatch: detectedRole === selectedRole,
+    penalties,
+    breakdown: base.breakdown
   };
 }
 
