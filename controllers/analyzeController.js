@@ -22,6 +22,7 @@ exports.uploadAndExtract = async (req, res) => {
 exports.uploadProfileData = async (req, res) => {
   try {
     const p = req.body;
+    console.log(p,"=======/////////////==========")
     if (!p) return res.status(400).json({ message: "Profile data required" });
 
     let text = "";
