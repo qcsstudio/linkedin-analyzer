@@ -1,5 +1,7 @@
+// utils/roleNormalizer.js
 function normalizeRole(role) {
   if (!role) return "job_seeker";
+
   const r = role.toLowerCase();
 
   if (r.includes("founder") || r.includes("ceo")) return "founder";
