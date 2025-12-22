@@ -1,24 +1,29 @@
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 
+const PLAN_AMOUNT = 49; // INR
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
-exports.createOrder = async (amount, userId) => {
+exports.createOrder = async (userId) => {
   return razorpay.orders.create({
-    amount: amount * 100, // convert to paise
+    amount: PLAN_AMOUNT * 100, // ₹49 only
     currency: "INR",
-    notes: { userId }
+    notes: {
+      userId: userId.toString(),
+      plan: "monthly"
+    }
   });
 };
 
-exports.verifyPayment = (orderId, paymentId, signature) => {
-  const body = orderId + "|" + paymentId;
+exports.verifySignature = (orderId, paymentId, signature) => {
+  const body = `${orderId}|${paymentId}`;
   const expectedSignature = crypto
     .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-    .update(body.toString())
+    .update(body)
     .digest("hex");
 
   return expectedSignature === signature;
