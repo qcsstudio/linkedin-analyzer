@@ -133,30 +133,48 @@ function jsonToText(profile) {
   if (profile.contact) text += profile.contact + "\n";
   return text;
 }
-
 exports.getSuggestions = async (req, res) => {
   try {
-    const analysis = await AnalyzedProfile.findOne({
-      userId: req.user._id
-    });
+    const userId = req.user.id; // from JWT middleware
+
+    // 1️⃣ Get latest analyzed profile
+    const analysis = await AnalyzedProfile.findOne({ userId })
+      .sort({ createdAt: -1 });
 
     if (!analysis) {
       return res.status(404).json({
-        message: "No analyzed profile found"
+        success: false,
+        message: "No analyzed profile found. Please analyze profile first."
       });
     }
 
+    // 2️⃣ OPTIONAL but STRONGLY RECOMMENDED – check payment
+    if (!req.user.isPaid) {
+      return res.status(403).json({
+        success: false,
+        message: "Payment required to unlock suggestions"
+      });
+    }
+
+    // 3️⃣ Generate AI suggestions
     const improvedProfile = await analyzeProfileAI(
       analysis.profileText,
       analysis.professionalRole
     );
 
+    // 4️⃣ Response
     res.json({
       success: true,
       original: analysis.profileData,
       improved: improvedProfile
     });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+
+  } catch (error) {
+    console.error("Suggestions error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate suggestions"
+    });
   }
 };
+
