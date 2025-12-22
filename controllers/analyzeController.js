@@ -41,18 +41,34 @@ exports.uploadProfileData = async (req, res) => {
       { upsert: true, new: true, runValidators: true }
     );
 
-    const response = {
-      url,
-      score: `${result.finalScore}%`,
-      baseScore: `${result.baseScore}%`,
-      strength:
-        result.finalScore < 40
-          ? "weak"
-          : result.finalScore < 70
-          ? "average"
-          : "strong",
-      potential: `${100 - result.finalScore}%`
-    };
+  const response = {
+  url,
+  score: `${result.finalScore}%`,
+  baseScore: `${result.baseScore}%`,
+  strength:
+    result.finalScore < 40
+      ? "weak"
+      : result.finalScore < 70
+      ? "average"
+      : "strong",
+  potential: `${100 - result.finalScore}%`,
+
+  sections: {
+    headline: result.breakdown.headline,
+    about: result.breakdown.about,
+    experience: result.breakdown.experience,
+    skills: result.breakdown.skills,
+    education: result.breakdown.education,
+    contact: result.breakdown.contact,
+    length: result.breakdown.length
+  },
+
+  penalties: result.penalties,
+  roleMatch: result.roleMatch,
+  detectedRole: result.detectedRole,
+  selectedRole: result.selectedRole
+};
+
 
     await client.setEx(cacheKey, 3600, JSON.stringify(response));
     res.json({ success: true, source: "computed", ...response });
