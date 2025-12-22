@@ -18,7 +18,7 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // ✅ 1. Check if user already exists
+    // 1️⃣ Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({
@@ -26,25 +26,25 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // ✅ 2. Normalize role FIRST
-    const normalizedRole = normalizeRole(role);
+    // 2️⃣ Normalize role FIRST
+    const normalizedRole = normalizeRole(role); // <-- HERE: normalize the frontend role
 
-    // ✅ 3. Create user
+    // 3️⃣ Create user using normalized enum
     const user = await User.create({
       email,
       password,
       phone,
-      accountType: mapRoleToAccountType(normalizedRole),
+      accountType: normalizedRole, // ✅ use normalized role here
       plan: "free"
     });
 
-    // ✅ 4. Link analyzed profile SAFELY (no save())
+    // 4️⃣ Link analyzed profile using normalized role
     await AnalyzedProfile.updateOne(
       { url },
-      { userId: user._id }
+      { userId: user._id, professionalRole: normalizedRole } // ✅ normalized enum
     );
 
-    // ✅ 5. Token
+    // 5️⃣ Generate token
     const token = jwt.sign(
       { id: user._id, accountType: user.accountType },
       process.env.JWT_SECRET,
@@ -56,6 +56,7 @@ exports.signup = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 exports.login = async (req, res) => {
   try {

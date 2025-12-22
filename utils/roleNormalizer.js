@@ -1,4 +1,3 @@
-// utils/roleNormalizer.js
 function normalizeRole(role) {
   if (!role) return "job_seeker";
 
@@ -11,5 +10,3 @@ function normalizeRole(role) {
 
   return "job_seeker";
 }
-
-module.exports = { normalizeRole };

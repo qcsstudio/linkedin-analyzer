@@ -11,13 +11,8 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-// Upload PDF (free)
-router.post("/upload", upload.single("pdf"), uploadAndExtract);
+
 router.post("/url", uploadProfileData);
-
-// Score API (free)
-router.post("/score", getScore);
-
 // Suggestions (PAID + AUTH)
 router.post("/suggestions", authMiddleware,planMiddleware,getSuggestions);
 

@@ -79,60 +79,6 @@ exports.uploadProfileData = async (req, res) => {
 };
 
 
-
-
-// -------------------------
-// 1️⃣ Upload PDF - FREE
-// -------------------------
-exports.uploadAndExtract = async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ message: "PDF required" });
-
-    const text = await parsePDF(req.file.path);
-
-    res.json({ success: true, text });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-
-
-// -------------------------
-// 2️⃣ Score Profile - FREE
-// -------------------------
-exports.getScore = async (req, res) => {
-  try {
-    const { text } = req.body;
-    if (!text) return res.status(400).json({ message: "Text required" });
-
-    const score = scoreProfile(text);
-
-    res.json({ success: true, score });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// -------------------------
-// 3️⃣ Get Suggestions - PAID ONLY
-// -------------------------
-
-
-// -------------------------
-// Helper: convert JSON profile to text
-// -------------------------
-function jsonToText(profile) {
-  let text = "";
-  if (profile.headline) text += profile.headline + "\n";
-  if (profile.about) text += profile.about + "\n";
-  if (profile.experience) text += profile.experience.join("\n") + "\n";
-  if (profile.skills) text += profile.skills.join(", ") + "\n";
-  if (profile.education) text += profile.education.join("\n") + "\n";
-  if (profile.contact) text += profile.contact + "\n";
-  return text;
-}
 exports.getSuggestions = async (req, res) => {
   try {
     const userId = req.user.id; // from JWT middleware
