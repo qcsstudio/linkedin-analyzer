@@ -12,50 +12,49 @@ const mapRoleToAccountType = (role) => {
 };
 exports.signup = async (req, res) => {
   try {
+    console.log("➡️ SIGNUP HIT");
+    console.log("📦 BODY:", req.body);
+
     const { email, password, phone, role, url } = req.body;
 
-    if (!email || !password || !role || !url) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
+    console.log("🔄 Normalizing role...");
+    const normalizedRole = normalizeRole(role);
+    console.log("✅ Normalized role:", normalizedRole);
 
-    // 1️⃣ Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({
-        message: "Email already registered. Please login."
-      });
-    }
-
-    // 2️⃣ Normalize role FIRST
-    const normalizedRole = normalizeRole(role); // <-- HERE: normalize the frontend role
-
-    // 3️⃣ Create user using normalized enum
     const user = await User.create({
       email,
       password,
       phone,
-      role: normalizedRole, // ✅ use normalized role here
+      role: normalizedRole,
       plan: "free"
     });
 
-    // 4️⃣ Link analyzed profile using normalized role
-    await AnalyzedProfile.updateOne(
+    console.log("👤 User created:", user._id);
+
+    const profile = await AnalyzedProfile.findOneAndUpdate(
       { url },
-      { userId: user._id, professionalRole: normalizedRole } // ✅ normalized enum
+      { $set: { userId: user._id, professionalRole: normalizedRole } },
+      { new: true }
     );
 
-    // 5️⃣ Generate token
+    console.log("🔗 Profile linked:", profile ? "YES" : "NO");
+
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
+    console.log("🔐 Token generated");
+
     res.json({ success: true, token });
+
   } catch (err) {
+    console.error("❌ SIGNUP ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 
 exports.login = async (req, res) => {
