@@ -34,7 +34,7 @@ exports.signup = async (req, res) => {
       email,
       password,
       phone,
-      accountType: normalizedRole, // ✅ use normalized role here
+      role: normalizedRole, // ✅ use normalized role here
       plan: "free"
     });
 
@@ -46,7 +46,7 @@ exports.signup = async (req, res) => {
 
     // 5️⃣ Generate token
     const token = jwt.sign(
-      { id: user._id, accountType: user.accountType },
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -70,12 +70,12 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: "Invalid password" });
 
     const token = jwt.sign(
-      { id: user._id, accountType: user.accountType },
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    res.json({ success: true, token, accountType: user.accountType });
+    res.json({ success: true, token, role: user.role });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
