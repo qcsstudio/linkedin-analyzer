@@ -25,13 +25,14 @@ Focus on:
 Focus on:
 - Hiring, talent sourcing, employer branding
 `;
-    default:
+    case "jobseeker":
       return `
 Focus on:
 - Skills, projects, impact
 - Job-ready professional tone
+- Optimize for recruiters
 `;
+    default:
+      return "";
   }
 }
-
-module.exports = { buildRolePrompt };
