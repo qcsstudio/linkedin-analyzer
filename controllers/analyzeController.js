@@ -6,6 +6,7 @@ const { hashProfile } = require("../utils/profileHasher");
 const { analyzeProfileAI } = require("../services/aiService");
 const { v4: uuidv4 } = require("uuid");
 const AnalyzedProfile = require("../models/AnalyzedProfile");
+const { buildTextFromImprovedProfile } = require("../utils/buildTextFromImprovedProfile");
 
 exports.uploadProfileData = async (req, res) => {
   try {
@@ -81,7 +82,10 @@ exports.uploadProfileData = async (req, res) => {
 exports.getSuggestions = async (req, res) => {
   try {
     const userId = req.user._id;
-    const analysis = await AnalyzedProfile.findOne({ userId }).sort({ createdAt: -1 });
+
+    const analysis = await AnalyzedProfile
+      .findOne({ userId })
+      .sort({ createdAt: -1 });
 
     if (!analysis) {
       return res.status(404).json({
@@ -90,15 +94,65 @@ exports.getSuggestions = async (req, res) => {
       });
     }
 
+    /* ---------------- ORIGINAL SCORE ---------------- */
+    const originalText = buildTextFromProfile(analysis.profileData);
+    const originalScore = scoreProfileWithRole(
+      originalText.toLowerCase(),
+      analysis.professionalRole
+    );
+
+    /* ---------------- AI IMPROVEMENT ---------------- */
     const improvedProfile = await analyzeProfileAI(
       analysis.profileText,
       analysis.professionalRole
     );
 
+    /* ---------------- IMPROVED SCORE ---------------- */
+    const improvedText = buildTextFromImprovedProfile(improvedProfile);
+    const improvedScore = scoreProfileWithRole(
+      improvedText.toLowerCase(),
+      analysis.professionalRole
+    );
+
+    /* ---------------- RESPONSE ---------------- */
     res.json({
       success: true,
-      original: analysis.profileData,
-      improved: improvedProfile
+
+      original: {
+        profile: analysis.profileData,
+        score: {
+          final: `${originalScore.finalScore}%`,
+          base: `${originalScore.baseScore}%`,
+          strength:
+            originalScore.finalScore < 40
+              ? "weak"
+              : originalScore.finalScore < 70
+              ? "average"
+              : "strong",
+          potential: `${100 - originalScore.finalScore}%`,
+          sections: originalScore.breakdown,
+          penalties: originalScore.penalties,
+          roleMatch: originalScore.roleMatch
+        }
+      },
+
+      improved: {
+        profile: improvedProfile,
+        score: {
+          final: `${improvedScore.finalScore}%`,
+          base: `${improvedScore.baseScore}%`,
+          strength:
+            improvedScore.finalScore < 40
+              ? "weak"
+              : improvedScore.finalScore < 70
+              ? "average"
+              : "strong",
+          potential: `${100 - improvedScore.finalScore}%`,
+          sections: improvedScore.breakdown,
+          penalties: improvedScore.penalties,
+          roleMatch: improvedScore.roleMatch
+        }
+      }
     });
 
   } catch (error) {
