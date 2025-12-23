@@ -1,12 +1,13 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const { normalizeRole } = require("../utils/roleNormalizer");
 
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: String,
 
-  accountType: {
+  role: {
     type: String,
     enum: ["job_seeker", "recruiter", "consultant", "sales", "founder"],
     required: true
