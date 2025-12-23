@@ -2,7 +2,7 @@ const crypto = require("crypto");
 
 function hashProfile(profile) {
   const cleanProfile = { ...profile };
-  delete cleanProfile.role; // role should NOT affect hash
+  delete cleanProfile.role; 
 
   return crypto
     .createHash("sha256")

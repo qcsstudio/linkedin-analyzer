@@ -9,8 +9,8 @@ exports.buildImprovedScore = (original) => {
     about: boostSection(original.about, 25),
     experience: boostSection(original.experience, 20),
     skills: boostSection(original.skills, 20),
-    education: original.education, // keep same
-    contact: original.contact,     // keep same
+    education: original.education, 
+    contact: original.contact,     
     length: boostSection(original.length, 10)
   };
 
@@ -24,7 +24,7 @@ exports.buildImprovedScore = (original) => {
     improvedSections.length;
 
   return {
-    finalScore: Math.min(total, 85), // cap at 85%
+    finalScore: Math.min(total, 85), 
     sections: improvedSections
   };
 };

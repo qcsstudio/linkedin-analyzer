@@ -3,23 +3,12 @@ const jwt = require("jsonwebtoken");
 const AnalyzedProfile = require("../models/AnalyzedProfile");
  const { normalizeRole } = require("../utils/roleNormalizer");
 
-
-const mapRoleToAccountType = (role) => {
-  if (role === "job_seeker") return "job_seeker";
-  if (role === "recruiter_talent") return "recruiter";
-  if (role === "sales_sdr_ae") return "sales";
-  return role; // founder_ceo, consultant_coach
-};
 exports.signup = async (req, res) => {
   try {
-    console.log("➡️ SIGNUP HIT");
-    console.log("📦 BODY:", req.body);
-
+    
     const { email, password, phone, role, url } = req.body;
 
-    console.log("🔄 Normalizing role...");
     const normalizedRole = normalizeRole(role);
-    console.log("✅ Normalized role:", normalizedRole);
 
     const user = await User.create({
       email,
@@ -29,15 +18,13 @@ exports.signup = async (req, res) => {
       plan: "free"
     });
 
-    console.log("👤 User created:", user._id);
+    console.log( user._id);
 
     const profile = await AnalyzedProfile.findOneAndUpdate(
       { url },
       { $set: { userId: user._id, professionalRole: normalizedRole } },
       { new: true }
     );
-
-    console.log("🔗 Profile linked:", profile ? "YES" : "NO");
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -50,7 +37,6 @@ exports.signup = async (req, res) => {
     res.json({ success: true, token });
 
   } catch (err) {
-    console.error("❌ SIGNUP ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 };

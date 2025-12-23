@@ -10,7 +10,7 @@ const razorpay = new Razorpay({
 
 exports.createOrder = async (userId) => {
   return razorpay.orders.create({
-    amount: PLAN_AMOUNT * 100, // ₹49 only
+    amount: PLAN_AMOUNT * 100, 
     currency: "INR",
     notes: {
       userId: userId.toString(),

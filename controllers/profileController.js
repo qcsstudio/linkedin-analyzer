@@ -1,9 +1,7 @@
-// controllers/profileController.js
 const { parsePDF } = require("../services/pdfParserService");
 const { analyzeProfileAI } = require("../services/aiService");
 const { scoreProfile } = require("../utils/scoringEngine");
 
-// Score text for free preview (0-100)
 exports.getScore = (req, res) => {
   try {
     const { text } = req.body;
@@ -19,7 +17,6 @@ exports.getScore = (req, res) => {
   }
 };
 
-// Paid AI action_tips (requires JWT + payment)
 exports.getSuggestions = async (req, res) => {
   try {
     const { text, role } = req.body;

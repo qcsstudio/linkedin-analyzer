@@ -13,7 +13,6 @@ const upload = multer({
 
 
 router.post("/url", uploadProfileData);
-// Suggestions (PAID + AUTH)
 router.post("/suggestions", authMiddleware,planMiddleware,getSuggestions);
 
 

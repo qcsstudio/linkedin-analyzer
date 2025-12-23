@@ -15,7 +15,7 @@ exports.uploadProfileData = async (req, res) => {
     const url = profile.url;
     if (!profile || !url) return res.status(400).json({ message: "Profile data and URL required" });
 
-    const selectedRole = normalizeRole(profile.role); // core role
+    const selectedRole = normalizeRole(profile.role); 
     const profileHash = hashProfile(profile);
     const cacheKey = `profile:${profileHash}:${selectedRole}`;
 
@@ -38,7 +38,7 @@ exports.uploadProfileData = async (req, res) => {
           score: result.finalScore,
           baseScore: result.baseScore
         },
-        $setOnInsert: { createdAt: new Date() } // preserve original creation date
+        $setOnInsert: { createdAt: new Date() } 
       },
       { upsert: true, new: true, runValidators: true }
     );
