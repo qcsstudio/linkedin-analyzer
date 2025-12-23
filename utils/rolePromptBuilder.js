@@ -36,3 +36,5 @@ Focus on:
       return "";
   }
 }
+
+module.exports = { buildRolePrompt };
