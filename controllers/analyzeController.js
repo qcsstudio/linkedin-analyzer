@@ -78,14 +78,10 @@ exports.uploadProfileData = async (req, res) => {
   }
 };
 
-
 exports.getSuggestions = async (req, res) => {
   try {
-    const userId = req.user.id; // from JWT middleware
-
-    // 1️⃣ Get latest analyzed profile
-    const analysis = await AnalyzedProfile.findOne({ userId })
-      .sort({ createdAt: -1 });
+    const userId = req.user._id;
+    const analysis = await AnalyzedProfile.findOne({ userId }).sort({ createdAt: -1 });
 
     if (!analysis) {
       return res.status(404).json({
@@ -94,21 +90,11 @@ exports.getSuggestions = async (req, res) => {
       });
     }
 
-    // 2️⃣ OPTIONAL but STRONGLY RECOMMENDED – check payment
-    if (!req.user.isPaid) {
-      return res.status(403).json({
-        success: false,
-        message: "Payment required to unlock suggestions"
-      });
-    }
-
-    // 3️⃣ Generate AI suggestions
     const improvedProfile = await analyzeProfileAI(
       analysis.profileText,
       analysis.professionalRole
     );
 
-    // 4️⃣ Response
     res.json({
       success: true,
       original: analysis.profileData,
@@ -123,4 +109,3 @@ exports.getSuggestions = async (req, res) => {
     });
   }
 };
-
