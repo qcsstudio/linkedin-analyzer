@@ -18,7 +18,7 @@ const user = await User.create({
   phone,
   role: normalizedRole,
   plan: "free",
-  hasActivePlan: true, // 🔴 IMPORTANT
+  hasActivePlan: true,
   planExpiresAt: new Date(Date.now() + FREE_DAYS * 24 * 60 * 60 * 1000)
 });
 
