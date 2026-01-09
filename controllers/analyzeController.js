@@ -9,11 +9,30 @@ const AnalyzedProfile = require("../models/AnalyzedProfile");
 const { buildTextFromImprovedProfile } = require("../utils/buildTextFromImprovedProfile");
 const { buildImprovedScore } = require("../utils/improvementScorer");
 
+
+function isProfileEmpty(profile) {
+  return (
+    !profile.headline &&
+    !profile.about &&
+    (!Array.isArray(profile.experience) || profile.experience.length === 0) &&
+    (!Array.isArray(profile.skills) || profile.skills.length === 0)
+  );
+}
+
+
 exports.uploadProfileData = async (req, res) => {
   try {
     const profile = req.body;
     const url = profile.url;
     if (!profile || !url) return res.status(400).json({ message: "Profile data and URL required" });
+
+if (isProfileEmpty(profile)) {
+      return res.status(400).json({
+        success: false,
+        code: "LINKEDIN_NOT_LOGGED_IN",
+        message: "Please login to your LinkedIn profile first"
+      });
+    }
 
     const selectedRole = normalizeRole(profile.role); 
     const profileHash = hashProfile(profile);
