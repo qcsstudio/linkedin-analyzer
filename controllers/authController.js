@@ -10,13 +10,19 @@ exports.signup = async (req, res) => {
 
     const normalizedRole = normalizeRole(role);
 
-    const user = await User.create({
-      email,
-      password,
-      phone,
-      role: normalizedRole,
-      plan: "free"
-    });
+  const FREE_DAYS = 7;
+
+const user = await User.create({
+  email,
+  password,
+  phone,
+  role: normalizedRole,
+  plan: "free",
+  hasActivePlan: true, // 🔴 IMPORTANT
+  planExpiresAt: new Date(Date.now() + FREE_DAYS * 24 * 60 * 60 * 1000)
+});
+
+
 
     console.log( user._id);
 

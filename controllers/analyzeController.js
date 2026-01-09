@@ -82,6 +82,7 @@ exports.uploadProfileData = async (req, res) => {
 
 exports.getSuggestions = async (req, res) => {
   try {
+
     const userId = req.user._id;
 
     const analysis = await AnalyzedProfile

@@ -1,13 +1,19 @@
 module.exports.planMiddleware = (req, res, next) => {
-  if (req.user.plan !== "paid") {
+  // trial or paid plan must be active
+  if (!req.user.hasActivePlan) {
     return res.status(403).json({
-      message: "Active plan required"
+      success: false,
+      code: "PAYMENT_REQUIRED",
+      message: "Free trial expired. Please purchase a plan."
     });
   }
 
+  // expiry check (trial or paid)
   if (req.user.planExpiresAt && req.user.planExpiresAt < new Date()) {
     return res.status(403).json({
-      message: "Plan expired. Please renew."
+      success: false,
+      code: "PAYMENT_REQUIRED",
+      message: "Your free access has expired. Please complete payment."
     });
   }
 
