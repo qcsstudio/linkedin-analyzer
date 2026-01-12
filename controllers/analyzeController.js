@@ -47,20 +47,28 @@ if (isProfileEmpty(profile)) {
     const result = scoreProfileWithRole(text.toLowerCase(), selectedRole);
 
     // Upsert profile without overwriting createdAt
-    const a = await AnalyzedProfile.findOneAndUpdate(
-      { url },
-      {
-        $set: {
-          professionalRole: selectedRole,
-          profileData: profile,
-          profileText: text,
-          score: result.finalScore,
-          baseScore: result.baseScore
-        },
-        $setOnInsert: { createdAt: new Date() } 
-      },
-      { upsert: true, new: true, runValidators: true }
-    );
+  const update = {
+  professionalRole: selectedRole,
+  profileData: profile,
+  profileText: text,
+  score: result.finalScore,
+  baseScore: result.baseScore
+};
+
+// 🔑 PRESERVE USER LINK IF LOGGED IN
+if (req.user?._id) {
+  update.userId = req.user._id;
+}
+
+await AnalyzedProfile.findOneAndUpdate(
+  { url },
+  {
+    $set: update,
+    $setOnInsert: { createdAt: new Date() }
+  },
+  { upsert: true, new: true, runValidators: true }
+);
+
 
   const response = {
   url,

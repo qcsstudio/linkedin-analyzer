@@ -22,15 +22,18 @@ const user = await User.create({
   planExpiresAt: new Date(Date.now() + FREE_DAYS * 24 * 60 * 60 * 1000)
 });
 
-
-
     console.log( user._id);
 
-    const profile = await AnalyzedProfile.findOneAndUpdate(
-      { url },
-      { $set: { userId: user._id, professionalRole: normalizedRole } },
-      { new: true }
-    );
+   await AnalyzedProfile.updateMany(
+  { url },
+  {
+    $set: {
+      userId: user._id,
+      professionalRole: normalizedRole
+    }
+  }
+);
+
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
