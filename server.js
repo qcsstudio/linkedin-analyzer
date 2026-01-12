@@ -6,6 +6,8 @@ const connectDB = require("./config/db");
 const analyzeRoutes = require("./routes/analyzeRoutes");
 const authRoutes = require("./routes/authRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const coupenRoutes = require("./routes/couponRoutes");
+
 
 const app = express();
 
@@ -18,6 +20,8 @@ connectDB();
 app.use("/api/analyze", analyzeRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/coupon", coupenRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("LinkedIn Analyzer API Running");
