@@ -9,15 +9,23 @@ const razorpay = new Razorpay({
 });
 
 exports.createOrder = async (userId) => {
-  return razorpay.orders.create({
-    amount: PLAN_AMOUNT * 100, 
+  const orderData = {
+    amount: PLAN_AMOUNT * 100,
     currency: "INR",
     notes: {
       userId: userId.toString(),
       plan: "monthly"
     }
-  });
+  };
+
+  // attach Razorpay offer (if active)
+  if (process.env.RAZORPAY_OFFER_ID) {
+    orderData.offers = [process.env.RAZORPAY_OFFER_ID];
+  }
+
+  return razorpay.orders.create(orderData);
 };
+
 
 exports.verifySignature = (orderId, paymentId, signature) => {
   const body = `${orderId}|${paymentId}`;
