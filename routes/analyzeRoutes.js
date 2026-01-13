@@ -1,19 +1,14 @@
+// analyzeRoutes.js
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const fs = require("fs");
+const { uploadProfileData, getSuggestions } = require("../controllers/analyzeController");
 const { planMiddleware } = require("../middleware/planMiddleware");
 const { authMiddleware } = require("../middleware/authMiddleware");
-const { uploadAndExtract,getScore,getSuggestions,uploadProfileData} = require("../controllers/analyzeController");
 
-const upload = multer({
-  dest: "uploads/",
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
-
-
+// POST JSON route
 router.post("/url", uploadProfileData);
-router.post("/suggestions", authMiddleware,planMiddleware,getSuggestions);
 
+// authenticated suggestions
+router.post("/suggestions", authMiddleware, planMiddleware, getSuggestions);
 
 module.exports = router;
