@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const { normalizeRole } = require("../utils/roleNormalizer");
 
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
@@ -13,20 +12,10 @@ const userSchema = new mongoose.Schema({
     required: true
   },
 
-  plan: {
-    type: String,
-  enum: ["none", "free", "paid"],
-    default: "free"
-  },
-
-  hasActivePlan: {
+  // 🔑 SINGLE SOURCE OF TRUTH
+  isPaid: {
     type: Boolean,
     default: false
-  },
-
-  planExpiresAt: {
-    type: Date,
-    default: null
   },
 
   createdAt: { type: Date, default: Date.now }

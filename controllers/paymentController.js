@@ -21,7 +21,6 @@ exports.createOrderController = async (req, res) => {
   res.json({ success: true, order });
 };
 
-
 exports.verifyPaymentController = async (req, res) => {
   const {
     razorpay_order_id,
@@ -57,11 +56,10 @@ exports.verifyPaymentController = async (req, res) => {
   payment.paidAt = new Date();
   await payment.save();
 
-  await User.findByIdAndUpdate(payment.user, {
-    hasActivePlan: true,
-    plan: "paid",
-    planExpiresAt: payment.expiresAt
+  // 🔓 UNLOCK USER
+  await User.findByIdAndUpdate(req.user._id, {
+    isPaid: true
   });
 
-  res.json({ success: true, message: "₹49 payment successful" });
+  res.json({ success: true, message: "Payment successful" });
 };
