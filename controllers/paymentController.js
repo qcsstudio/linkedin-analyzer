@@ -49,9 +49,8 @@ exports.verifyPaymentController = async (req, res) => {
       return res.status(400).json({ message: "Invalid signature" });
     }
 
-    // ✅ DO NOTHING ELSE
-    // ❌ no payment update
-    // ❌ no user unlock
+    
+await User.findByIdAndUpdate(req.user._id, { isPaid: true });
 
     return res.json({
       success: true,
