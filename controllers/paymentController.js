@@ -20,42 +20,33 @@ exports.createOrderController = async (req, res) => {
 
   res.json({ success: true, order });
 };
+
 exports.verifyPaymentController = async (req, res) => {
   try {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature
-    } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
     const payment = await Payment.findOne({
       razorpayOrderId: razorpay_order_id,
       user: req.user._id
     });
 
-    if (!payment) {
-      return res.status(403).json({ message: "Unauthorized payment" });
-    }
+    if (!payment) return res.status(403).json({ message: "Unauthorized payment" });
 
-    const isValid = verifySignature(
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature
-    );
+    const isValid = verifySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+    if (!isValid) return res.status(400).json({ message: "Invalid signature" });
 
-    if (!isValid) {
-      return res.status(400).json({ message: "Invalid signature" });
-    }
+    // ✅ UPDATE PAYMENT
+    payment.status = "paid";
+    payment.razorpayPaymentId = razorpay_payment_id;
+    payment.paidAt = new Date();
+    await payment.save();
 
-    // ❌ NO PAYMENT UPDATE
-    // ❌ NO USER UNLOCK
+    // 🔓 UNLOCK USER IMMEDIATELY
+    await User.findByIdAndUpdate(req.user._id, { isPaid: true });
 
-    return res.json({
-      success: true,
-      message: "Payment verified. Awaiting confirmation."
-    });
+    return res.json({ success: true, message: "Payment successful" });
   } catch (error) {
-    console.error("Verify error:", error);
-    res.status(500).json({ message: "Verification failed" });
+    console.error(error);
+    return res.status(500).json({ message: "Verification failed" });
   }
 };
