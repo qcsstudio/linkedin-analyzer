@@ -2,6 +2,8 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 exports.authMiddleware = async (req, res, next) => {
+  console.log("AUTH MIDDLEWARE HIT"); // 👈 here
+
   try {
     const authHeader = req.headers.authorization;
 
@@ -12,9 +14,6 @@ exports.authMiddleware = async (req, res, next) => {
       });
     }
 
-    // handle both formats:
-    // "Bearer token"
-    // "token"
     const token = authHeader.startsWith("Bearer ")
       ? authHeader.split(" ")[1]
       : authHeader;
