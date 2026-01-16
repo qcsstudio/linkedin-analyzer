@@ -34,8 +34,10 @@ exports.authMiddleware = async (req, res, next) => {
         message: "Invalid token"
       });
     }
-
+    console.log(user)
+console.log("------")
     req.user = user;
+    console.log(req.user)
     next();
   } catch (err) {
     console.error("Auth error:", err.message);

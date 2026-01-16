@@ -4,6 +4,8 @@ const { createOrder, verifySignature } = require("../services/razorpayService");
 
 exports.createOrderController = async (req, res) => {
   // 🔒 use isPaid instead of hasActivePlan
+console.log("23456789")
+
   if (req.user.isPaid) {
     return res.status(400).json({ message: "Plan already active" });
   }
