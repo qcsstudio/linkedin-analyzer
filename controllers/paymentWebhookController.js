@@ -7,7 +7,7 @@ exports.razorpayWebhook = async (req, res) => {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const signature = req.headers["x-razorpay-signature"];
 
-    const rawBody = req.body; // ✅ BUFFER (DO NOT TOUCH)
+    const rawBody = req.body; // Buffer from express.raw
 
     const expectedSignature = crypto
       .createHmac("sha256", secret)
@@ -26,20 +26,12 @@ exports.razorpayWebhook = async (req, res) => {
 
     const paymentEntity = event.payload.payment.entity;
 
-    const payment = await Payment.findOne({
-      razorpayOrderId: paymentEntity.order_id
-    });
+    const payment = await Payment.findOne({ razorpayOrderId: paymentEntity.order_id });
 
-    if (!payment) {
-      return res.json({ status: "payment_not_found" });
-    }
+    if (!payment) return res.json({ status: "payment_not_found" });
 
-    // ✅ IDEMPOTENCY (VERY IMPORTANT)
-    if (payment.status === "paid") {
-      return res.json({ status: "already_processed" });
-    }
+    if (payment.status === "paid") return res.json({ status: "already_processed" });
 
-    // ✅ SAVE REAL PAYMENT DATA (₹1 OR ₹49)
     payment.status = "paid";
     payment.razorpayPaymentId = paymentEntity.id;
     payment.amount = paymentEntity.amount / 100;
@@ -52,10 +44,7 @@ exports.razorpayWebhook = async (req, res) => {
 
     await payment.save();
 
-    // 🔓 UNLOCK USER (ONLY PLACE THIS EVER HAPPENS)
-    await User.findByIdAndUpdate(payment.user, {
-      isPaid: true
-    });
+    await User.findByIdAndUpdate(payment.user, { isPaid: true });
 
     return res.json({ status: "success" });
   } catch (error) {
